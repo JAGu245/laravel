@@ -14,26 +14,35 @@ new #[Layout('layouts.guest')] class extends Component
      */
     public function login(): void
     {
-        $this->validate();
+        $this->validate([
+            'form.nik' => 'required|regex:/^\d{4}-\d{4}$/', // Validasi format NIK
+            'form.password' => 'required',
+        ]);
 
-        $this->form->authenticate();
+        // Ganti authenticate dengan NIK
+        if (!auth()->attempt(['nik' => $this->form->nik, 'password' => $this->form->password], $this->form->remember)) {
+            // Jika gagal login
+            $this->addError('form.nik', 'NIK atau password salah.');
+            return;
+        }
 
         Session::regenerate();
 
         $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
-}; ?>
+};
+?>
 
 <div>
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
     <form wire:submit="login">
-        <!-- Email Address -->
+        <!-- NIK -->
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="form.email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
+            <x-input-label for="nik" :value="__('NIK')" />
+            <x-text-input wire:model="form.nik" id="nik" class="block mt-1 w-full" type="text" name="nik" required autofocus autocomplete="username" />
+            <x-input-error :messages="$errors->get('form.nik')" class="mt-2" />
         </div>
 
         <!-- Password -->
